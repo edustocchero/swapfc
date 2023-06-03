@@ -4,11 +4,15 @@ use std::io::{Read, Write};
 const DEFAULT_BUF_SIZE: usize = 1024;
 const SWAPFC_TEMP_FILENAME: &str = ".swapfctemp";
 
-pub fn create_temp_file(source: &str) -> Result<(), std::io::Error> {
-    todo!("TODO: implement create_temp_file")
+pub fn create_temp_file(source_path: &str) -> Result<(), std::io::Error> {
+    let mut source_file = open_file_with_read_permission(source_path)?;
+
+    let mut temp_file = File::create(SWAPFC_TEMP_FILENAME)?;
+
+    copy_file_content(&mut source_file, &mut temp_file)
 }
 
-pub fn swap_file_content(source: &mut File, destination: &mut File) -> Result<(), std::io::Error> {
+pub fn copy_file_content(source: &mut File, destination: &mut File) -> Result<(), std::io::Error> {
     let mut file_has_content = true;
 
     while file_has_content {
