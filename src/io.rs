@@ -1,18 +1,28 @@
 use std::fs::{OpenOptions, File};
 use std::io::{Read, Write};
 
+type IOResult = Result<(), std::io::Error>;
+
 const DEFAULT_BUF_SIZE: usize = 1024;
 const SWAPFC_TEMP_FILENAME: &str = ".swapfctemp";
 
-pub fn create_temp_file(source_path: &str) -> Result<(), std::io::Error> {
-    let mut source_file = open_file_with_read_permission(source_path)?;
+pub fn swap_file_content(source: &str, destination: &str) -> IOResult {
+    create_temp_file(&source)?;
 
-    let mut temp_file = File::create(SWAPFC_TEMP_FILENAME)?;
+    let mut source_file = open_file_with_read_permission(&destination)?;
+    let mut destination_file = open_file_with_write_permission_truncate(&source)?;
+    copy_file_content(&mut source_file, &mut destination_file)?;
 
-    copy_file_content(&mut source_file, &mut temp_file)
+    let mut source_file = open_file_with_read_permission(SWAPFC_TEMP_FILENAME)?;
+    let mut destination_file = open_file_with_write_permission_truncate(&destination)?;
+    copy_file_content(&mut source_file, &mut destination_file)?;
+
+    delete_temp_file()?;
+
+    Ok(())
 }
 
-pub fn copy_file_content(source: &mut File, destination: &mut File) -> Result<(), std::io::Error> {
+fn copy_file_content(source: &mut File, destination: &mut File) -> IOResult {
     let mut file_has_content = true;
 
     while file_has_content {
@@ -33,7 +43,14 @@ pub fn copy_file_content(source: &mut File, destination: &mut File) -> Result<()
     Ok(())
 }
 
-pub fn delete_temp_file() -> Result<(), std::io::Error> {
+fn create_temp_file(source_path: &str) -> IOResult {
+    let mut source_file = open_file_with_read_permission(source_path)?;
+    let mut temp_file = File::create(SWAPFC_TEMP_FILENAME)?;
+
+    copy_file_content(&mut source_file, &mut temp_file)
+}
+
+fn delete_temp_file() -> IOResult {
     std::fs::remove_file(SWAPFC_TEMP_FILENAME)
 }
 
