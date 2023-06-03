@@ -1,13 +1,32 @@
 use std::fs::{OpenOptions, File};
+use std::io::{Read, Write};
 
+const DEFAULT_BUF_SIZE: usize = 1024;
 const SWAPFC_TEMP_FILENAME: &str = ".swapfctemp";
 
 pub fn create_temp_file(source: &str) -> Result<(), std::io::Error> {
     todo!("TODO: implement create_temp_file")
 }
 
-pub fn swap_file_content(source: &str, destination: &str) -> Result<(), std::io::Error> {
-    todo!("TODO: implement swap_file_content")
+pub fn swap_file_content(source: &mut File, destination: &mut File) -> Result<(), std::io::Error> {
+    let mut file_has_content = true;
+
+    while file_has_content {
+        let mut buf = [0u8; DEFAULT_BUF_SIZE];
+        let result_read = source.read(&mut buf)?;
+
+        match result_read {
+            0 => {
+                file_has_content = false;
+            }
+            size => {
+                destination.write(&mut buf[..size])?;
+            }
+        }
+    }
+
+    destination.flush()?;
+    Ok(())
 }
 
 pub fn delete_temp_file() -> Result<(), std::io::Error> {
